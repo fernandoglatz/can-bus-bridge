@@ -3,37 +3,35 @@
 #include <SPI.h>
 #include <mcp2515.h>
 
-const String ACTION = "action";
-const String RESTART = "restart";
-const String GET_INFO = "get-info";
-const String SETUP = "setup";
+const char ACTION[] = "action";
+const char RESTART[] = "restart";
+const char GET_INFO[] = "get-info";
+const char SETUP[] = "setup";
 
-const String EVENT = "event";
-const String EVENT_INFO = "info";
-const String EVENT_SETUP_COMPLETED = "setup-completed";
-const String EVENT_MISSING_SETUP = "missing-setup";
+const char EVENT[] = "event";
+const char EVENT_INFO[] = "info";
+const char EVENT_SETUP_COMPLETED[] = "setup-completed";
+const char EVENT_MISSING_SETUP[] = "missing-setup";
 
-const String VERSION = "version";
-const String VERSION_VALUE = "1.0.0";
+const char VERSION[] = "version";
+const char VERSION_VALUE[] = "1.0.0";
 
-const unsigned long BAUD_RATE = 115200;
+const unsigned long BAUD_RATE PROGMEM = 115200;
 
-const unsigned long INTERVAL_1HZ = 1000;
-const unsigned long INTERVAL_5HZ = 200;
+const unsigned int INTERVAL_1HZ PROGMEM = 1000;
+const unsigned char INTERVAL_5HZ PROGMEM = 200;
 
 unsigned long lastTime1Hz = 0;
 unsigned long lastTime5Hz = 0;
-int availableChannels = 0;
+
+unsigned char availableChannels = 0;
 
 struct CanBusChannel {
-    int channel;
-    int pin;
+    unsigned char channel;
+    unsigned char pin;
 };
 
-struct CanBusChannel channels[10];
-
-//{"action":"setup","channels":[{"pin":10,"channel":0,"baudrate":500,"clock":8}]}
-//{"action":"restart"}
+struct CanBusChannel channels[5];
 
 void (*restart)(void) = 0;
 
@@ -49,15 +47,15 @@ void logError(String message) {
     Serial.println("[" + String(millis()) + "] ERROR - " + message);
 }
 
-void sendSerialMessage(JsonDocument json) {
+void sendSerialMessage(DynamicJsonDocument json) {
     String jsonString;
-    serializeJson(json, jsonString);
-    Serial.println(jsonString);
+    serializeJson(json, Serial);
+    Serial.println("");
 }
 
 void execute1HzTask() {
     if (availableChannels == 0) {
-        JsonDocument eventJson;
+        DynamicJsonDocument eventJson(8);
         eventJson[EVENT] = EVENT_MISSING_SETUP;
         sendSerialMessage(eventJson);
     }
@@ -66,103 +64,176 @@ void execute1HzTask() {
 void execute5HzTask() {
 }
 
-void processSerialInput() {
-    String input = Serial.readStringUntil('\n');
+void processCanMessageSend(String input) {
+    struct can_frame canFrame;
 
-    JsonDocument receivedJson;
-    deserializeJson(receivedJson, input);
+    int inputLength = input.length();
+    int spaceIndex = input.indexOf(' ');
+    int channelInt = input.substring(2, spaceIndex).toInt();
+
+    int secondSpaceIndex = input.indexOf(' ', spaceIndex + 1);
+    String idHex = input.substring(spaceIndex + 1, secondSpaceIndex);
+    canFrame.can_id = strtol(idHex.c_str(), NULL, 16);
+
+    String data = input.substring(secondSpaceIndex + 1);
+
+    int currentColonIndex = secondSpaceIndex;
+    int bytes = 0;
+    for (int i = 0; i < 8; i++) {
+        int colonIndex = input.indexOf(':', currentColonIndex + 1);
+        if (colonIndex == -1 && inputLength > currentColonIndex + 1) {
+            colonIndex = inputLength;
+        }
+
+        if (colonIndex > -1) {
+            String datahex = input.substring(currentColonIndex + 1, colonIndex);
+            canFrame.data[i] = strtol(datahex.c_str(), NULL, 16);
+
+            currentColonIndex = colonIndex;
+            bytes++;
+        } else {
+            break;
+        }
+    }
+
+    canFrame.can_dlc = bytes;
+
+    if (bytes == 0) {
+        logError("Received message with no data: " + input);
+    } else {
+        struct CanBusChannel* channel = NULL;
+        for (int i = 0; i < availableChannels; i++) {
+            if (channels[i].channel == channelInt) {
+                channel = &channels[i];
+                break;
+            }
+        }
+
+        if (channel == NULL) {
+            logError("Received message for unknown channel: " + input);
+
+        } else {
+            MCP2515 mcp2515(channel->pin);
+            mcp2515.sendMessage(&canFrame);
+        }
+    }
+}
+
+void processAction(DynamicJsonDocument receivedJson) {
     String action = receivedJson[ACTION];
 
     if (action == RESTART) {
+        logInfo("Restarting...");
+        delay(1000);
         restart();
 
     } else if (action == GET_INFO) {
-        JsonDocument event;
-        event[EVENT] = EVENT_INFO;
-        event[VERSION] = VERSION_VALUE;
-        sendSerialMessage(event);
+        DynamicJsonDocument infoJson(16);
+        infoJson[EVENT] = EVENT_INFO;
+        infoJson[VERSION] = VERSION_VALUE;
+        sendSerialMessage(infoJson);
 
     } else if (action == SETUP) {
-        JsonArray channelsJson = receivedJson["channels"];
-        availableChannels = 0;
+        JsonObject channelJson = receivedJson["channel"];
 
-        for (JsonVariant channelJson : channelsJson) {
-            int pin = channelJson["pin"];
-            int channel = channelJson["channel"];
-            long baudrate = channelJson["baudrate"];
-            long clock = channelJson["clock"];
+        unsigned char pin = channelJson["pin"];
+        unsigned char channel = channelJson["channel"];
+        int baudrate = channelJson["baudrate"];
+        unsigned char clock = channelJson["clock"];
 
-            CAN_SPEED canSpeed;
-            switch (baudrate) {
-                case 5:
-                    canSpeed = CAN_5KBPS;
-                    break;
-                case 10:
-                    canSpeed = CAN_10KBPS;
-                    break;
-                case 20:
-                    canSpeed = CAN_20KBPS;
-                    break;
-                case 33:
-                    canSpeed = CAN_33KBPS;
-                    break;
-                case 50:
-                    canSpeed = CAN_50KBPS;
-                    break;
-                case 100:
-                    canSpeed = CAN_100KBPS;
-                    break;
-                case 125:
-                    canSpeed = CAN_125KBPS;
-                    break;
-                case 200:
-                    canSpeed = CAN_200KBPS;
-                    break;
-                case 250:
-                    canSpeed = CAN_250KBPS;
-                    break;
-                case 1000:
-                    canSpeed = CAN_1000KBPS;
-                    break;
-                case 500:
-                default:
-                    canSpeed = CAN_500KBPS;
-                    break;
-            }
-
-            CAN_CLOCK canClock;
-            switch (clock) {
-                case 20:
-                    canClock = MCP_20MHZ;
-                    break;
-                case 16:
-                    canClock = MCP_16MHZ;
-                    break;
-                case 8:
-                default:
-                    canClock = MCP_8MHZ;
-                    break;
-            }
-
-            logInfo("Configuring channel " + String(channel) + " on pin " + String(pin) + " with baudrate " + String(baudrate) + " and clock " + String(clock));
-
-            MCP2515 mcp2515(pin);
-            mcp2515.reset();
-            mcp2515.setBitrate(canSpeed, canClock);
-            mcp2515.setNormalMode();
-
-            CanBusChannel newChannel = {channel, pin};
-            channels[availableChannels] = newChannel;
-
-            availableChannels++;
+        CAN_SPEED canSpeed;
+        switch (baudrate) {
+            case 5:
+                canSpeed = CAN_5KBPS;
+                break;
+            case 10:
+                canSpeed = CAN_10KBPS;
+                break;
+            case 20:
+                canSpeed = CAN_20KBPS;
+                break;
+            case 33:
+                canSpeed = CAN_33KBPS;
+                break;
+            case 50:
+                canSpeed = CAN_50KBPS;
+                break;
+            case 100:
+                canSpeed = CAN_100KBPS;
+                break;
+            case 125:
+                canSpeed = CAN_125KBPS;
+                break;
+            case 200:
+                canSpeed = CAN_200KBPS;
+                break;
+            case 250:
+                canSpeed = CAN_250KBPS;
+                break;
+            case 1000:
+                canSpeed = CAN_1000KBPS;
+                break;
+            case 500:
+            default:
+                canSpeed = CAN_500KBPS;
+                break;
         }
 
-        JsonDocument event;
-        event[EVENT] = EVENT_SETUP_COMPLETED;
-        sendSerialMessage(event);
+        CAN_CLOCK canClock;
+        switch (clock) {
+            case 20:
+                canClock = MCP_20MHZ;
+                break;
+            case 16:
+                canClock = MCP_16MHZ;
+                break;
+            case 8:
+            default:
+                canClock = MCP_8MHZ;
+                break;
+        }
+
+        logInfo("Configuring channel " + String(channel) + " on pin " + String(pin) + " with baudrate " + String(baudrate) + " and clock " + String(clock));
+
+        MCP2515 mcp2515(pin);
+        mcp2515.reset();
+        mcp2515.setBitrate(canSpeed, canClock);
+        mcp2515.setNormalMode();
+
+        CanBusChannel newChannel = {channel, pin};
+        channels[availableChannels] = newChannel;
+
+        availableChannels++;
+
+        DynamicJsonDocument setupJson(8);
+        setupJson[EVENT] = EVENT_SETUP_COMPLETED;
+        sendSerialMessage(setupJson);
 
     } else {
-        logInfo("Received from serial: " + input);
+        logError("Unknown action: " + action);
+    }
+}
+
+void processSerialInput() {
+    String input = Serial.readStringUntil('\n');
+
+    if (input.startsWith("CH")) {
+        processCanMessageSend(input);
+
+    } else if (input == "\n") {
+        Serial.println("");
+
+    } else {
+        DynamicJsonDocument receivedJson(128);
+        deserializeJson(receivedJson, input);
+        String action = receivedJson[ACTION];
+
+        if (action != "") {
+            processAction(receivedJson);
+
+        } else {
+            logInfo("Received from serial: " + input);
+        }
     }
 }
 
@@ -220,7 +291,7 @@ void loop() {
                     message = message + byteHex;
                 }
 
-                Serial.println(message);
+                // Serial.println(message);
             }
         }
     }

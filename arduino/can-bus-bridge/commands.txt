@@ -1,0 +1,10 @@
+
+{"action":"get-info"}
+{"action":"restart"}
+
+
+{"action":"setup","channel":{"pin":10,"channel":0,"baudrate":100,"clock":8}}
+{"action":"setup","channel":{"pin":9,"channel":1,"baudrate":500,"clock":8}}
+{"action":"setup","channel":{"pin":8,"channel":2,"baudrate":100,"clock":8}}
+
+CH1 531 00:00:03:00:00:00:00:00
