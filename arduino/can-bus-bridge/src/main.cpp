@@ -6,13 +6,16 @@
 const char ACTION[] = "action";
 const char RESTART[] = "restart";
 const char GET_INFO[] = "get-info";
+const char GET_CHANNELS[] = "get-channels";
 const char SETUP[] = "setup";
 
 const char EVENT[] = "event";
+const char EVENT_CHANNELS[] = "channels";
 const char EVENT_INFO[] = "info";
 const char EVENT_SETUP_COMPLETED[] = "setup-completed";
 const char EVENT_MISSING_SETUP[] = "missing-setup";
 
+const char MILLIS[] = "millis";
 const char VERSION[] = "version";
 const char VERSION_VALUE[] = "1.0.0";
 
@@ -27,8 +30,11 @@ unsigned long lastTime5Hz = 0;
 unsigned char availableChannels = 0;
 
 struct CanBusChannel {
-    unsigned char channel;
     unsigned char pin;
+    unsigned char channel;
+    int baudrate;
+    unsigned char clock;
+    bool readable;
 };
 
 struct CanBusChannel channels[5];
@@ -128,10 +134,27 @@ void processAction(DynamicJsonDocument receivedJson) {
         restart();
 
     } else if (action == GET_INFO) {
-        DynamicJsonDocument infoJson(16);
+        DynamicJsonDocument infoJson(32);
         infoJson[EVENT] = EVENT_INFO;
         infoJson[VERSION] = VERSION_VALUE;
+        infoJson[MILLIS] = millis();
         sendSerialMessage(infoJson);
+
+    } else if (action == GET_CHANNELS) {
+        DynamicJsonDocument channelsJson(128);
+        channelsJson[EVENT] = EVENT_CHANNELS;
+        JsonArray channelsArray = channelsJson.createNestedArray(EVENT_CHANNELS);
+
+        for (int i = 0; i < availableChannels; i++) {
+            JsonObject channelJson = channelsArray.createNestedObject();
+            channelJson["pin"] = channels[i].pin;
+            channelJson["channel"] = channels[i].channel;
+            channelJson["baudrate"] = channels[i].baudrate;
+            channelJson["clock"] = channels[i].clock;
+            channelJson["readable"] = channels[i].readable;
+        }
+
+        sendSerialMessage(channelsJson);
 
     } else if (action == SETUP) {
         JsonObject channelJson = receivedJson["channel"];
@@ -140,6 +163,7 @@ void processAction(DynamicJsonDocument receivedJson) {
         unsigned char channel = channelJson["channel"];
         int baudrate = channelJson["baudrate"];
         unsigned char clock = channelJson["clock"];
+        bool readable = channelJson["readable"];
 
         CAN_SPEED canSpeed;
         switch (baudrate) {
@@ -193,14 +217,14 @@ void processAction(DynamicJsonDocument receivedJson) {
                 break;
         }
 
-        logInfo("Configuring channel " + String(channel) + " on pin " + String(pin) + " with baudrate " + String(baudrate) + " and clock " + String(clock));
+        logInfo("Configuring channel " + String(channel) + " on pin " + String(pin) + " with baudrate " + String(baudrate) + " and clock " + String(clock) + " and readable " + String(readable));
 
         MCP2515 mcp2515(pin);
         mcp2515.reset();
         mcp2515.setBitrate(canSpeed, canClock);
         mcp2515.setNormalMode();
 
-        CanBusChannel newChannel = {channel, pin};
+        CanBusChannel newChannel = {pin, channel, baudrate, clock, readable};
         channels[availableChannels] = newChannel;
 
         availableChannels++;
@@ -220,11 +244,11 @@ void processSerialInput() {
     if (input.startsWith("CH")) {
         processCanMessageSend(input);
 
-    } else if (input == "\n") {
+    } else if (input.length() == 1) {
         Serial.println("");
 
     } else {
-        DynamicJsonDocument receivedJson(128);
+        DynamicJsonDocument receivedJson(256);
         deserializeJson(receivedJson, input);
         String action = receivedJson[ACTION];
 
@@ -264,8 +288,8 @@ void loop() {
     }
 
     for (int i = 0; i < availableChannels; i++) {
-        struct can_frame canFrame;
         struct CanBusChannel channel = channels[i];
+        struct can_frame canFrame;
 
         MCP2515 mcp2515(channel.pin);
 
@@ -273,11 +297,11 @@ void loop() {
             int pid = canFrame.can_id;
             int bits = canFrame.can_dlc;
 
-            if (bits > 0) {
+            if (bits > 0 && channel.readable) {
                 char pidHex[9];
                 sprintf(pidHex, "%X", pid);
 
-                String message = "CH" + String(channel.channel) + " " + String(pidHex) + " ";
+                String message = "CH" + String(channel.channel) + " " + millis() + " " + String(pidHex) + " ";
 
                 for (int i = 0; i < bits; i++) {
                     int byteValue = canFrame.data[i];
@@ -291,7 +315,7 @@ void loop() {
                     message = message + byteHex;
                 }
 
-                // Serial.println(message);
+                Serial.println(message);
             }
         }
     }

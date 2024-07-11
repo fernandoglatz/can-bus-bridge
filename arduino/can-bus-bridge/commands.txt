@@ -1,10 +1,71 @@
 
 {"action":"get-info"}
+{"action":"get-channels"}
 {"action":"restart"}
 
+-------infotainment-------
+{"action":"setup","channel":{"pin":10,"channel":0,"baudrate":100,"clock":8,"readable":true}}
 
-{"action":"setup","channel":{"pin":10,"channel":0,"baudrate":100,"clock":8}}
-{"action":"setup","channel":{"pin":9,"channel":1,"baudrate":500,"clock":8}}
-{"action":"setup","channel":{"pin":8,"channel":2,"baudrate":100,"clock":8}}
+-------dashboard-------
+{"action":"setup","channel":{"pin":9,"channel":1,"baudrate":500,"clock":8,"readable":true}}
 
+-------convenience-------
+{"action":"setup","channel":{"pin":8,"channel":2,"baudrate":100,"clock":8,"readable":true}}
+
+
+------Pisca------
 CH1 531 00:00:03:00:00:00:00:00
+
+------Luzes------
+CH1 635 30:00:10
+
+------Ignition------
+CH0 42B 0B:14:00:00:00:00
+
+------Teste------
+CH0 351 02:00:00:00:00:00:00:00
+
+------Button menu left------
+CH0 5C1 09:00:00:60
+CH0 5C1 00:00:00:60
+
+------Button menu right------
+CH1 5C1 0A:00:00:60
+CH1 5C1 00:00:00:60
+
+------Button ok------
+CH1 5C1 28:00:00:60
+CH1 5C1 00:00:00:60
+
+------Button back------
+CH1 5C1 29:00:00:60
+CH1 5C1 00:00:00:60
+
+------Button up------
+CH1 5C1 22:00:00:60
+CH1 5C1 00:00:00:60
+
+------Button down------
+CH1 5C1 23:00:00:60
+CH1 5C1 00:00:00:60
+
+------Button left------
+CH1 5C1 03:00:00:60
+CH1 5C1 00:00:00:60
+
+------Button right------
+CH1 5C1 02:00:00:60
+CH1 5C1 00:00:00:60
+
+------Button vol up------
+CH1 5C1 06:00:00:60
+CH1 5C1 00:00:00:60
+
+------Button vol down------
+CH1 5C1 07:00:00:60
+CH1 5C1 00:00:00:60
+
+------Button vol down------
+CH1 5C1 28:00:00:60
+CH1 5C1 00:00:00:60
+
