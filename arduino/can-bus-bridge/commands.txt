@@ -1,23 +1,36 @@
 
 {"action":"get-info"}
 {"action":"get-channels"}
+{"action":"get-bridges"}
 {"action":"restart"}
 
 -------infotainment-------
-{"action":"setup","channel":{"pin":10,"channel":0,"baudrate":100,"clock":8,"readable":true}}
+{"action":"add-channel","channel":{"pin":10,"channel":0,"baudrate":100,"clock":8,"readable":true}}
 
 -------dashboard-------
-{"action":"setup","channel":{"pin":9,"channel":1,"baudrate":500,"clock":8,"readable":true}}
+{"action":"add-channel","channel":{"pin":9,"channel":1,"baudrate":500,"clock":8,"readable":true}}
 
 -------convenience-------
-{"action":"setup","channel":{"pin":8,"channel":2,"baudrate":100,"clock":8,"readable":true}}
+{"action":"add-channel","channel":{"pin":8,"channel":2,"baudrate":100,"clock":8,"readable":true}}
+
+-------diagnostic-------
+{"action":"add-channel","channel":{"pin":8,"channel":3,"baudrate":500,"clock":8,"readable":true}}
+
+{"action":"add-bridge","channelA":0,"channelB":1}
+
+
+CH2 7DF 02:09:01:00:00:00:00:00
+
+CH2 200 01:C0:00:10:00:03:01:00
+
+
 
 
 ------Pisca------
 CH1 531 00:00:03:00:00:00:00:00
 
 ------Luzes------
-CH1 635 30:00:10
+CH1 635 64:00:64
 
 ------Ignition------
 CH0 42B 0B:14:00:00:00:00
