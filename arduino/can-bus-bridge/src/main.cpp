@@ -34,8 +34,6 @@ uint8_t availableBridges = 0;
 struct CanBusChannel {
     uint8_t pin;
     uint8_t channel;
-    uint16_t baudrate;
-    uint8_t clock;
     bool readable;
 };
 
@@ -45,7 +43,7 @@ struct CanBusBridge {
 };
 
 struct CanBusChannel channels[5];
-struct CanBusBridge bridges[4];
+struct CanBusBridge bridges[5];
 
 void (*restart)(void) = 0;
 
@@ -126,6 +124,7 @@ void processCanMessageSend(const String& input) {
 
     if (bytes == 0) {
         logError(F("Received message with no data: "), input);
+
     } else {
         struct CanBusChannel* channel = NULL;
         for (int i = 0; i < availableChannels; i++) {
@@ -168,8 +167,6 @@ void processAction(JsonDocument receivedJson) {
             JsonObject channelJson = channelsArray.add<JsonObject>();
             channelJson[F("pin")] = channels[i].pin;
             channelJson[F("channel")] = channels[i].channel;
-            channelJson[F("baudrate")] = channels[i].baudrate;
-            channelJson[F("clock")] = channels[i].clock;
             channelJson[F("readable")] = channels[i].readable;
         }
         sendSerialMessage(&channelsJson);
@@ -250,7 +247,13 @@ void processAction(JsonDocument receivedJson) {
         mcp2515.setBitrate(canSpeed, canClock);
         mcp2515.setNormalMode();
 
-        CanBusChannel newChannel = {pin, channel, baudrate, clock, readable};
+        /*
+        mcp2515.setFilterMask(MCP2515::MASK0, false, 0x07FF0000);
+        mcp2515.setFilter(MCP2515::RXF0, false, 0x00000000);
+        mcp2515.setFilter(MCP2515::RXF1, false, 0x00000000);
+        */
+
+        CanBusChannel newChannel = {pin, channel, readable};
         channels[availableChannels] = newChannel;
 
         availableChannels++;
@@ -291,11 +294,11 @@ void processSerialInput() {
         deserializeJson(receivedJson, input);
         String action = receivedJson[F("action")];
 
-        if (action != "") {
+        if (action != "" && action != F("null")) {
             processAction(receivedJson);
 
         } else {
-            logWarn("Received from serial: ", input);
+            logWarn(F("Received from serial: "), input);
         }
     }
 }
