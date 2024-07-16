@@ -1,6 +1,5 @@
 #include <Arduino.h>
 #include <ArduinoJson.h>
-#include <MemoryFree.h>
 #include <SPI.h>
 #include <mcp2515.h>
 
@@ -157,7 +156,6 @@ void processAction(JsonDocument receivedJson) {
         infoJson[F("event")] = F("info");
         infoJson[F("version")] = F("1.0.0");
         infoJson[F("millis")] = millis();
-        infoJson[F("freeMemory")] = freeMemory();
         sendSerialMessage(&infoJson);
 
     } else if (action == F("get-channels")) {
@@ -260,6 +258,28 @@ void processAction(JsonDocument receivedJson) {
 
         JsonDocument eventJson;
         eventJson[F("event")] = F("add-channel-completed");
+        sendSerialMessage(&eventJson);
+
+    } else if (action == F("set-filter")) {
+        uint8_t channel = receivedJson[F("channel")];
+        bool extended = receivedJson[F("extended")];
+        uint32_t mask = receivedJson[F("mask")];
+        uint32_t filter = receivedJson[F("filter")];
+
+        for (int i = 0; i < availableChannels; i++) {
+            if (channels[i].channel == channel) {
+                struct CanBusChannel channelObj = channels[i];
+
+                MCP2515 mcp2515(channelObj.pin);
+                mcp2515.setFilterMask(MCP2515::MASK0, extended, mask);
+                mcp2515.setFilter(MCP2515::RXF0, extended, filter);
+                mcp2515.setFilterMask(MCP2515::MASK1, extended, mask);
+                break;
+            }
+        }
+
+        JsonDocument eventJson;
+        eventJson[F("event")] = F("set-filter-completed");
         sendSerialMessage(&eventJson);
 
     } else if (action == F("add-bridge")) {
