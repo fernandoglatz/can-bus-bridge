@@ -1,2 +1,14 @@
-drop table settings;
-drop table channel;
+DROP TABLE settings;
+DROP TABLE preset;
+DROP TABLE channel;
+DROP TABLE channel_filter;
+DROP TABLE pid_filter;
+DROP TABLE transmission;
+DROP TABLE trace;
+DROP TABLE tracelog;
+DROP TABLE pid_translate;
+DROP TABLE bridge;
+DROP TABLE bridge_pid_filter;
+DROP TABLE bridge_pid;
+DROP TABLE message_transform;
+DROP TABLE bomber;

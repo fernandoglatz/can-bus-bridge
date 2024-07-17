@@ -39,6 +39,7 @@ struct CanBusChannel {
 struct CanBusBridge {
     uint8_t channelA;
     uint8_t channelB;
+    bool bidirectional;
 };
 
 struct CanBusChannel channels[5];
@@ -279,8 +280,9 @@ void processAction(JsonDocument receivedJson) {
     } else if (action == F("add-bridge")) {
         uint8_t channelA = receivedJson[F("channelA")];
         uint8_t channelB = receivedJson[F("channelB")];
+        bool bidirectional = receivedJson[F("bidirectional")];
 
-        CanBusBridge newBridge = {channelA, channelB};
+        CanBusBridge newBridge = {channelA, channelB, bidirectional};
         bridges[availableBridges] = newBridge;
 
         availableBridges++;
@@ -325,7 +327,7 @@ void bridgeFrame(const uint8_t& channel, struct can_frame* canFrame) {
             MCP2515 destinationMcp2515(destinationChannel.pin);
             destinationMcp2515.sendMessage(canFrame);
 
-        } else if (bridge.channelB == channel) {
+        } else if (bridge.bidirectional && bridge.channelB == channel) {
             struct CanBusChannel destinationChannel = channels[bridge.channelA];
             MCP2515 destinationMcp2515(destinationChannel.pin);
             destinationMcp2515.sendMessage(canFrame);
@@ -367,9 +369,9 @@ void loop() {
 
         if (mcp2515.readMessage(&canFrame) == MCP2515::ERROR_OK) {
             int pid = canFrame.can_id;
-            int bits = canFrame.can_dlc;
+            int bytes = canFrame.can_dlc;
 
-            if (bits > 0 && channel.readable) {
+            if (bytes > 0 && channel.readable) {
                 char pidHex[9];
                 sprintf(pidHex, "%X", pid);
 
@@ -381,7 +383,7 @@ void loop() {
                 Serial.print(pidHex);
                 Serial.print(' ');
 
-                for (int i = 0; i < bits; i++) {
+                for (int i = 0; i < bytes; i++) {
                     int byteValue = canFrame.data[i];
 
                     if (i > 0) {

@@ -16,8 +16,8 @@
 -------diagnostic-------
 {"action":"add-channel","channel":{"pin":8,"channel":3,"baudrate":500,"clock":8,"readable":true}}
 
-{"action":"add-bridge","channelA":0,"channelB":1}
-{"action":"add-bridge","channelA":2,"channelB":3}
+{"action":"add-bridge","channelA":0,"channelB":1,bidirectional:true}
+{"action":"add-bridge","channelA":2,"channelB":3,bidirectional:true}
 
 
 CH2 7DF 02:09:01:00:00:00:00:00

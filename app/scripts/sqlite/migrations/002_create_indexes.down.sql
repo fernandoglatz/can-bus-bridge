@@ -1,0 +1,1 @@
+DROP INDEX idx_settings_key_unique;

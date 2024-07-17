@@ -3,8 +3,8 @@ package entity
 import "time"
 
 type Entity struct {
-	ID        int       `gorm:"primaryKey" json:"id,omitempty"`
-	CreatedAt time.Time `gorm:"column:created_at" json:"createdAt,omitempty"`
+	ID        int       `gorm:"primaryKey"`
+	CreatedAt time.Time `gorm:"column:created_at"`
 }
 
 func (entity Entity) GetID() int {

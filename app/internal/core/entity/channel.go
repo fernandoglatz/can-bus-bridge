@@ -2,9 +2,13 @@ package entity
 
 type Channel struct {
 	Entity
-	Pin      int  `json:"pin,omitempty" gorm:"column:pin"`
-	Channel  int  `json:"channel,omitempty" gorm:"column:channel"`
-	Baudrate int  `json:"baudrate,omitempty" gorm:"column:baudrate"`
-	Clock    int  `json:"clock,omitempty" gorm:"column:clock"`
-	Readable bool `json:"readable,omitempty" gorm:"column:readable"`
+	PresetID    int    `gorm:"column:preset_id"`
+	Description string `gorm:"column:description"`
+	Pin         int    `gorm:"column:pin"`
+	Channel     int    `gorm:"column:channel"`
+	Baudrate    int    `gorm:"column:baudrate"`
+	Clock       int    `gorm:"column:clock"`
+	Readable    bool   `gorm:"column:readable"`
+	ReverseMask bool   `gorm:"column:reverse_mask"`
+	Enabled     bool   `gorm:"column:enabled"`
 }

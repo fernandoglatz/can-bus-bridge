@@ -1,0 +1,17 @@
+package entity
+
+type Transmission struct {
+	Entity
+	Interval int  `gorm:"column:interval"`
+	PID      int  `gorm:"column:pid"`
+	Bytes    int  `gorm:"column:bytes"`
+	Byte0    int  `gorm:"column:byte0"`
+	Byte1    int  `gorm:"column:byte1"`
+	Byte2    int  `gorm:"column:byte2"`
+	Byte3    int  `gorm:"column:byte3"`
+	Byte4    int  `gorm:"column:byte4"`
+	Byte5    int  `gorm:"column:byte5"`
+	Byte6    int  `gorm:"column:byte6"`
+	Byte7    int  `gorm:"column:byte7"`
+	Enabled  bool `gorm:"column:enabled"`
+}
