@@ -1,0 +1,20 @@
+{
+    "files.exclude": {
+        "**/.git": true,
+        "**/.svn": true,
+        "**/.hg": true,
+        "**/CVS": true,
+        "**/.DS_Store": true,
+        "**/Thumbs.db": true,
+        ".history": true
+    },
+    "explorerExclude.backup": {},
+    "peacock.color": "#8edf78",
+    "workbench.colorCustomizations": {
+        "statusBar.background": "#8edf78",
+        "statusBarItem.hoverBackground": "#6bd54f",
+        "statusBarItem.remoteBackground": "#8edf78",
+        "statusBar.foreground": "#15202b",
+        "statusBarItem.remoteForeground": "#15202b"
+    }
+}

@@ -1,0 +1,16 @@
+CREATE TABLE settings (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    key VARCHAR NOT NULL,
+    value VARCHAR NOT NULL,
+    created_at TIMESTAMP NOT NULL
+);
+
+CREATE TABLE channel (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    pin INTEGER NOT NULL,
+    channel INTEGER NOT NULL,
+    baudrate INTEGER NOT NULL,
+    clock INTEGER NOT NULL,
+    readable BOOLEAN NOT NULL,
+    created_at TIMESTAMP NOT NULL
+);

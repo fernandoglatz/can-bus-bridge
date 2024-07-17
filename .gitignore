@@ -32,3 +32,5 @@ arduino/*/*/README
 
 !arduino/*/.vscode/extensions.json
 !arduino/*/.vscode/settings.json
+
+app/database.db

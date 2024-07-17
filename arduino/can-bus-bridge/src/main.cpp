@@ -5,9 +5,6 @@
 
 const uint32_t BAUD_RATE PROGMEM = 115200;
 
-const uint16_t INTERVAL_1HZ PROGMEM = 1000;
-const uint8_t INTERVAL_5HZ PROGMEM = 200;
-
 const uint8_t BAUD_RATE_5KBPS PROGMEM = 5;
 const uint8_t BAUD_RATE_10KBPS PROGMEM = 10;
 const uint8_t BAUD_RATE_20KBPS PROGMEM = 20;
@@ -23,6 +20,9 @@ const uint16_t BAUD_RATE_1000KBPS PROGMEM = 1000;
 const uint8_t CLOCK_20MHZ PROGMEM = 20;
 const uint8_t CLOCK_16MHZ PROGMEM = 16;
 const uint8_t CLOCK_8MHZ PROGMEM = 8;
+
+const uint16_t INTERVAL_1HZ = 1000;
+const uint8_t INTERVAL_5HZ = 200;
 
 unsigned long lastTime1Hz = 0;
 unsigned long lastTime5Hz = 0;
@@ -244,12 +244,6 @@ void processAction(JsonDocument receivedJson) {
         mcp2515.reset();
         mcp2515.setBitrate(canSpeed, canClock);
         mcp2515.setNormalMode();
-
-        /*
-        mcp2515.setFilterMask(MCP2515::MASK0, false, 0x07FF0000);
-        mcp2515.setFilter(MCP2515::RXF0, false, 0x00000000);
-        mcp2515.setFilter(MCP2515::RXF1, false, 0x00000000);
-        */
 
         CanBusChannel newChannel = {pin, channel, readable};
         channels[availableChannels] = newChannel;
