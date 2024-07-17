@@ -1,7 +1,7 @@
 package entity
 
-type BridgePIDFilter struct {
+type BridgePidFilter struct {
 	Entity
 	BridgeID int `gorm:"column:bridge_id"`
-	PID      int `gorm:"column:pid"`
+	Pid      int `gorm:"column:pid"`
 }

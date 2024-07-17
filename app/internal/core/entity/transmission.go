@@ -3,7 +3,7 @@ package entity
 type Transmission struct {
 	Entity
 	Interval int  `gorm:"column:interval"`
-	PID      int  `gorm:"column:pid"`
+	Pid      int  `gorm:"column:pid"`
 	Bytes    int  `gorm:"column:bytes"`
 	Byte0    int  `gorm:"column:byte0"`
 	Byte1    int  `gorm:"column:byte1"`

@@ -1,9 +1,9 @@
 package entity
 
-type BridgePID struct {
+type BridgePid struct {
 	Entity
 	PresetID      int  `gorm:"column:preset_id"`
-	PID           int  `gorm:"column:pid"`
+	Pid           int  `gorm:"column:pid"`
 	ChannelA      int  `gorm:"column:channel_a"`
 	ChannelB      int  `gorm:"column:channel_b"`
 	Bidirectional bool `gorm:"column:bidirectional"`

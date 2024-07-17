@@ -6,7 +6,7 @@ type Bomber struct {
 	Type              int  `gorm:"column:type"`
 	MessageInterval   int  `gorm:"column:message_interval"`
 	IncrementInterval int  `gorm:"column:increment_interval"`
-	PID               int  `gorm:"column:pid"`
+	Pid               int  `gorm:"column:pid"`
 	Byte0             int  `gorm:"column:byte0"`
 	Byte1             int  `gorm:"column:byte1"`
 	Byte2             int  `gorm:"column:byte2"`
